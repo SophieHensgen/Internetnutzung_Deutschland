@@ -1,0 +1,164 @@
+---
+title: "Internetnutzung"
+author: "Sophie Hensgen"
+date: "3/1/2021"
+output: html_document
+---
+
+```{r packages, include=FALSE}
+
+library(pdftools)
+library("glue")
+library("tidyverse")
+library("ggthemes")
+library(tabulizer)
+```
+
+## Download Data from PDF
+
+Next create a vector of PDF file names using the list.files function. The pattern argument says to only grab those files ending with “pdf”:
+
+```{r pdf, echo=FALSE}
+
+files <- list.files(pattern = "pdf$")
+
+```
+
+## Lapply
+
+We’ll use this vector to automate the process of reading in the text of the PDF files.
+
+The pdftools function for extracting text is pdf_text. Using the lapply function, we can apply the pdf_text function to each element in the “files” vector and create an object called “opinions”.
+
+```{r lapply}
+opinions <- lapply(files, pdf_text)
+
+lapply(opinions, length) 
+str(opinions)
+```
+
+## Cleaning Data
+
+Clean Data from 2020
+
+```{r einzelne pdfs}
+ikt.16 <- opinions[[1]]
+ikt.17 <- opinions[[2]]
+ikt.18 <- opinions[[3]]
+ikt.19 <- opinions[[4]]
+ikt.20 <- opinions[[5]]
+```
+
+## Start Cleaning Data with 2016
+
+
+```{r einzelne pdfs}
+ikt.16 
+
+gesamt <- ikt.16[13]
+
+table <- str_replace_all(gesamt, "\\s{2,}", "|")
+table <- gsub("^.*?Jahren.","",table)
+table
+
+read.table(text=gsub("(?<=[a-z])\\s+", "\n", table, perl=TRUE), 
+            header=TRUE)
+col.names = c("lfd Nr.", "Gegenstand der Nachweisung", "erfasst", "hochgerechnet", "erfasst", "hochgerechnet", "erfasst", "hochgerechnet", "erfasst", "hochgerechnet", "erfasst", "hochgerechnet")
+
+clean_table <- function(table){
+    table <- str_split(table, "\n", simplify = TRUE)
+    #country_name <- table[1, 1] %>% 
+      #  stringr::str_squish() %>% 
+       # stringr::str_extract(".+?(?=\\sTotal)")
+    table_start <- stringr::str_which(table, "Erfasste Haushalte")
+    table_end <- stringr::str_which(table, "11 472")
+    #table <- table[1, (table_start +1 ):(table_end - 1)]
+    table <- str_replace_all(table, "\\s{2,}", "|")
+    text_con <- textConnection(table)
+    data_table <- read.csv(text_con, sep = "|")
+    #colnames(data_table) <- c("h", "Number", "Gegenstand der Nachweisung", "Mitte", "Deutschland", "Früheres Bundesgebiet", "Neue Länder und Berlin")
+    #dplyr::mutate(data_table, Country = country_name)
+}
+```
+
+## Start Cleaning Data with 2017
+
+
+```{r einzelne pdfs}
+ikt.17
+
+gesamt <- ikt.17[13]
+
+```
+
+## Start Cleaning Data with 2018
+
+
+```{r einzelne pdfs}
+ikt.18
+
+gesamt <- ikt.18[13]
+
+```
+
+## Start Cleaning Data with 2019
+
+
+```{r einzelne pdfs}
+ikt.19
+
+gesamt <- ikt.19[13]
+
+```
+
+## Start Cleaning Data with 2020
+
+
+```{r einzelne pdfs}
+ikt.20
+
+gesamt <- ikt.20[13]
+
+```
+
+## Cleaning ikt.11
+
+
+```{r einzelne pdfs}
+# ab 7 fangen die Tabellen an bis 76
+
+
+clean_table <- function(table){
+    table <- str_split(table, "\n", simplify = TRUE)
+    #country_name <- table[1, 1] %>% 
+      #  stringr::str_squish() %>% 
+       # stringr::str_extract(".+?(?=\\sTotal)")
+    table_start <- stringr::str_which(table, "Erfasste Haushalte")
+    table_end <- stringr::str_which(table, "/  ")
+    #table <- table[1, (table_start +1 ):(table_end - 1)]
+    table <- str_replace_all(table, "\\s{2,}", "|")
+    text_con <- textConnection(table)
+    data_table <- read.csv(text_con, sep = "|")
+    #colnames(data_table) <- c("h", "Number", "Gegenstand der Nachweisung", "Mitte", "Deutschland", "Früheres Bundesgebiet", "Neue Länder und Berlin")
+    #dplyr::mutate(data_table, Country = country_name)
+}
+
+clean_table(ikt.11[7])
+clean <- ikt.11[7]
+clean <- str_split(ikt.11[7], "\n", simplify = TRUE)
+
+ table <- str_replace_all(clean, "\\s{2,}", "|")
+ clean <- str_split(table, "\n", simplify = TRUE)
+```
+
+
+
+
+
+
+
+
+
+
+
+
