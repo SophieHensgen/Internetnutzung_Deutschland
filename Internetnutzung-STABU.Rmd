@@ -4,13 +4,14 @@ author: "Sophie Hensgen"
 date: "3/1/2021"
 output: html_document
 ---
+## Load required packages
 
 ```{r packages, include=FALSE}
 
 library(pdftools)
-library("glue")
-library("tidyverse")
-library("ggthemes")
+library(glue)
+library(tidyverse)
+library(ggthemes)
 library(tabulizer)
 ```
 
@@ -35,11 +36,12 @@ opinions <- lapply(files, pdf_text)
 
 lapply(opinions, length) 
 str(opinions)
+
 ```
 
-## Cleaning Data
+## Store each PDF in an object
 
-Clean Data from 2020
+Cleaning Data from 2016-2020
 
 ```{r einzelne pdfs}
 ikt.16 <- opinions[[1]]
@@ -53,18 +55,32 @@ ikt.20 <- opinions[[5]]
 
 
 ```{r einzelne pdfs}
+# interessante Tabelle auf Seite 13
 ikt.16 
+cat(ikt.16[13])
 
-gesamt <- ikt.16[13]
+table <- ikt.16[13]
 
-table <- str_replace_all(gesamt, "\\s{2,}", "|")
+# Delete the collumns for easy access
+t <- gsub(".*10 Jahren", "", table) # delete everything before 10 Jahren
+t <- gsub("1 Einschließlich.*$", "", t) # delete everything after 1 Einschließlich
+t <- unlist(strsplit(t, split = "\\s{2,}")) # split into individual characters
+
+t <- t[-c(1, 38,39,112,185,246,247,285,297)] # delete first element 
+
+df <- data.frame(matrix(unlist(t), nrow=length(t), byrow=TRUE),stringsAsFactors=FALSE) # store list objects in data frame
+
+
+
+table <- str_split(t, "\n", simplify = TRUE)
+table <- str_replace_all(table, "\\s{2,}", "|")
 table <- gsub("^.*?Jahren.","",table)
 table
 
 read.table(text=gsub("(?<=[a-z])\\s+", "\n", table, perl=TRUE), 
             header=TRUE)
 col.names = c("lfd Nr.", "Gegenstand der Nachweisung", "erfasst", "hochgerechnet", "erfasst", "hochgerechnet", "erfasst", "hochgerechnet", "erfasst", "hochgerechnet", "erfasst", "hochgerechnet")
-
+?str_split
 clean_table <- function(table){
     table <- str_split(table, "\n", simplify = TRUE)
     #country_name <- table[1, 1] %>% 
@@ -121,35 +137,7 @@ gesamt <- ikt.20[13]
 
 ```
 
-## Cleaning ikt.11
 
-
-```{r einzelne pdfs}
-# ab 7 fangen die Tabellen an bis 76
-
-
-clean_table <- function(table){
-    table <- str_split(table, "\n", simplify = TRUE)
-    #country_name <- table[1, 1] %>% 
-      #  stringr::str_squish() %>% 
-       # stringr::str_extract(".+?(?=\\sTotal)")
-    table_start <- stringr::str_which(table, "Erfasste Haushalte")
-    table_end <- stringr::str_which(table, "/  ")
-    #table <- table[1, (table_start +1 ):(table_end - 1)]
-    table <- str_replace_all(table, "\\s{2,}", "|")
-    text_con <- textConnection(table)
-    data_table <- read.csv(text_con, sep = "|")
-    #colnames(data_table) <- c("h", "Number", "Gegenstand der Nachweisung", "Mitte", "Deutschland", "Früheres Bundesgebiet", "Neue Länder und Berlin")
-    #dplyr::mutate(data_table, Country = country_name)
-}
-
-clean_table(ikt.11[7])
-clean <- ikt.11[7]
-clean <- str_split(ikt.11[7], "\n", simplify = TRUE)
-
- table <- str_replace_all(clean, "\\s{2,}", "|")
- clean <- str_split(table, "\n", simplify = TRUE)
-```
 
 
 
