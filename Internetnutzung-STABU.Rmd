@@ -56,8 +56,8 @@ ikt.20 <- opinions[[5]]
 
 ```{r einzelne pdfs}
 # interessante Tabelle auf Seite 13
-ikt.16 
-cat(ikt.16[13])
+#ikt.16 
+#cat(ikt.16[13])
 
 table <- ikt.16[13]
 
@@ -66,35 +66,37 @@ t <- gsub(".*10 Jahren", "", table) # delete everything before 10 Jahren
 t <- gsub("1 Einschließlich.*$", "", t) # delete everything after 1 Einschließlich
 t <- unlist(strsplit(t, split = "\\s{2,}")) # split into individual characters
 
-t <- t[-c(1, 38,39,112,185,246,247,285,297)] # delete first element 
+t <- t[-c(1, 38,39,112,185,246,247,286,297)] # delete first element 
+t <- gsub("Rentner/-innen und andere", "Rentner/-innen und andere nicht erwerbstätige Personen", t)
+t <- gsub("10 - 15", "Alter: 10 - 15", t)
+t <- gsub("16 - 24", "Alter: 16 - 24", t)
+t <- gsub("25 - 44", "Alter: 25 - 44", t)
+t <- gsub("45 - 64", "Alter: 45 - 64", t)
+t <- gsub("65 Jahre und älter", "Alter: 65 Jahre und älter.", t)
+t <- gsub("\\.", "", t)
+t <- gsub("Männlich", "Männlich - Komplett", t)
+t <- gsub("Weiblich", "Weiblich - Komplett", t)
+t <- gsub("Niedrig", "Bildungsstand - Niedrig", t)
+t <- gsub("Mittel", "Bildungsstand - Mittel", t)
+t <- gsub("Hoch", "Bildungsstand - Hoch", t)
+b <- list()
 
-df <- data.frame(matrix(unlist(t), nrow=length(t), byrow=TRUE),stringsAsFactors=FALSE) # store list objects in data frame
-
-
-
-table <- str_split(t, "\n", simplify = TRUE)
-table <- str_replace_all(table, "\\s{2,}", "|")
-table <- gsub("^.*?Jahren.","",table)
-table
-
-read.table(text=gsub("(?<=[a-z])\\s+", "\n", table, perl=TRUE), 
-            header=TRUE)
-col.names = c("lfd Nr.", "Gegenstand der Nachweisung", "erfasst", "hochgerechnet", "erfasst", "hochgerechnet", "erfasst", "hochgerechnet", "erfasst", "hochgerechnet", "erfasst", "hochgerechnet")
-?str_split
-clean_table <- function(table){
-    table <- str_split(table, "\n", simplify = TRUE)
-    #country_name <- table[1, 1] %>% 
-      #  stringr::str_squish() %>% 
-       # stringr::str_extract(".+?(?=\\sTotal)")
-    table_start <- stringr::str_which(table, "Erfasste Haushalte")
-    table_end <- stringr::str_which(table, "11 472")
-    #table <- table[1, (table_start +1 ):(table_end - 1)]
-    table <- str_replace_all(table, "\\s{2,}", "|")
-    text_con <- textConnection(table)
-    data_table <- read.csv(text_con, sep = "|")
-    #colnames(data_table) <- c("h", "Number", "Gegenstand der Nachweisung", "Mitte", "Deutschland", "Früheres Bundesgebiet", "Neue Länder und Berlin")
-    #dplyr::mutate(data_table, Country = country_name)
+for(i in 1:12){
+  b[[i]] <- t[seq(i, length(t), 12)] # loop to create individual columns per list
 }
+
+df <- data.frame(b[[1]], b[[2]],  b[[3]], b[[4]], b[[5]], b[[6]], b[[7]], b[[8]], b[[9]], b[[10]], b[[11]], b[[12]]) # Create data frame
+
+df$StartingAge <- c(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 16, 16, 16, 16, 16, 16, 16) # add column which says what the asking age was
+df$SurvYear <- c(2016) # add column with survey year
+df$Geschlecht <- c("Total", "Total", "Total", "Total", "Total", "Total", "Total", "Total", "Männlich", "Männlich", "Männlich", "Männlich", "Männlich", "Männlich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Total", "Total", "Total", "Total", "Total", "Total", "Total")
+df$GeschlechtNum <- ifelse(df$Geschlecht == "Total", 3, ifelse(df$Geschlecht == "Männlich", 1, 2))
+  
+colnames(df) <- c("Lfd. Nr.", "Gegenstand der Nachweisung", "Alle Personen: erfasste Anzahl", "Alle Personen: hochgerechnet 1000", "Internetnutzer/-innen: erfasste Anzahl", "Internetnutzer/-innen: hochgerechnet 1000", "Internetnutzer/-innen letzte 3 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 3 Monate: hochgerechnet 1000", "Internetnutzer/-innen letzte 12 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 12 Monate: hochgerechnet 1000", "Online-EInkäufer/-innen letzte 12 Monate: erfasste Anzahl", "Online-EInkäufer/-innen letzte 12 Monate: hochgerechnet 1000", "StartingAge", "SurvYear", "Geschlecht", "GeschlechtNum")
+
+df
+
+str(df)
 ```
 
 ## Start Cleaning Data with 2017
