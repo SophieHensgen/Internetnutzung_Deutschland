@@ -13,6 +13,7 @@ library(glue)
 library(tidyverse)
 library(ggthemes)
 library(tabulizer)
+library(dplyr)
 ```
 
 ## Download Data from PDF
@@ -79,8 +80,9 @@ t <- gsub("Weiblich", "Weiblich - Komplett", t)
 t <- gsub("Niedrig", "Bildungsstand - Niedrig", t)
 t <- gsub("Mittel", "Bildungsstand - Mittel", t)
 t <- gsub("Hoch", "Bildungsstand - Hoch", t)
-b <- list()
+t <- gsub("\n", "", t)
 
+b <- list()
 for(i in 1:12){
   b[[i]] <- t[seq(i, length(t), 12)] # loop to create individual columns per list
 }
@@ -91,21 +93,80 @@ df$StartingAge <- c(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 
 df$SurvYear <- c(2016) # add column with survey year
 df$Geschlecht <- c("Total", "Total", "Total", "Total", "Total", "Total", "Total", "Total", "Männlich", "Männlich", "Männlich", "Männlich", "Männlich", "Männlich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Total", "Total", "Total", "Total", "Total", "Total", "Total")
 df$GeschlechtNum <- ifelse(df$Geschlecht == "Total", 3, ifelse(df$Geschlecht == "Männlich", 1, 2))
-  
-colnames(df) <- c("Lfd. Nr.", "Gegenstand der Nachweisung", "Alle Personen: erfasste Anzahl", "Alle Personen: hochgerechnet 1000", "Internetnutzer/-innen: erfasste Anzahl", "Internetnutzer/-innen: hochgerechnet 1000", "Internetnutzer/-innen letzte 3 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 3 Monate: hochgerechnet 1000", "Internetnutzer/-innen letzte 12 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 12 Monate: hochgerechnet 1000", "Online-EInkäufer/-innen letzte 12 Monate: erfasste Anzahl", "Online-EInkäufer/-innen letzte 12 Monate: hochgerechnet 1000", "StartingAge", "SurvYear", "Geschlecht", "GeschlechtNum")
+df$`Online-EInkäufer/-innen letzte 3 Monate: erfasste Anzahl` <- NA
+df$`Online-EInkäufer/-innen letzte 3 Monate: hochgerechnet 1000` <- NA
+df <- df[c(1,2,3,4,5,6,7,8,9,10,17,18,11,12,13,14,15,16)]
+colnames(df) <- c("Lfd. Nr.", "Gegenstand der Nachweisung", "Alle Personen: erfasste Anzahl", "Alle Personen: hochgerechnet 1000", "Internetnutzer/-innen: erfasste Anzahl", "Internetnutzer/-innen: hochgerechnet 1000", "Internetnutzer/-innen letzte 3 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 3 Monate: hochgerechnet 1000", "Internetnutzer/-innen letzte 12 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 12 Monate: hochgerechnet 1000", "Online-EInkäufer/-innen letzte 3 Monate: erfasste Anzahl", "Online-EInkäufer/-innen letzte 3 Monate: hochgerechnet 1000", "Online-EInkäufer/-innen letzte 12 Monate: erfasste Anzahl", "Online-EInkäufer/-innen letzte 12 Monate: hochgerechnet 1000", "StartingAge", "SurvYear", "Geschlecht", "GeschlechtNum")
 
-df
+df16 <- df
+df16
 
-str(df)
+```
+
+## Save Data Frame for 2016
+
+
+```{r Save Data Frame}
+
+# Store dataframe as csv style
+write.csv(df16,"/Users/sophiehensgen/Github-Projects/Internetnutzung_Deutschland/internet.16.csv", row.names = FALSE)
+
 ```
 
 ## Start Cleaning Data with 2017
 
 
 ```{r einzelne pdfs}
-ikt.17
+#ikt.17
 
-gesamt <- ikt.17[13]
+table <- ikt.17[14]
+
+# Delete the collumns for easy access
+t <- gsub(".*10 Jahren", "", table) # delete everything before 10 Jahren
+t <- gsub("1 Einschließlich.*$", "", t) # delete everything after 1 Einschließlich
+t <- unlist(strsplit(t, split = "\\s{2,}")) # split into individual characters
+
+t <- t[-c(1, 44, 45, 130, 215, 286, 287, 332, 345)] # delete first element 
+t <- gsub("Rentner/-innen und andere", "Rentner/-innen und andere nicht erwerbstätige Personen", t)
+t <- gsub("10 - 15", "Alter: 10 - 15", t)
+t <- gsub("16 - 24", "Alter: 16 - 24", t)
+t <- gsub("25 - 44", "Alter: 25 - 44", t)
+t <- gsub("45 - 64", "Alter: 45 - 64", t)
+t <- gsub("65 Jahre und älter", "Alter: 65 Jahre und älter.", t)
+t <- gsub("\\.", "", t)
+t <- gsub("Männlich", "Männlich - Komplett", t)
+t <- gsub("Weiblich", "Weiblich - Komplett", t)
+t <- gsub("Niedrig", "Bildungsstand - Niedrig", t)
+t <- gsub("Mittel", "Bildungsstand - Mittel", t)
+t <- gsub("Hoch", "Bildungsstand - Hoch", t)
+t <- gsub("\n", "", t)
+
+b <- list()
+for(i in 1:14){
+  b[[i]] <- t[seq(i, length(t), 14)] # loop to create individual columns per list
+}
+
+df <- data.frame(b[[1]], b[[2]],  b[[3]], b[[4]], b[[5]], b[[6]], b[[7]], b[[8]], b[[9]], b[[10]], b[[11]], b[[12]], b[[13]], b[[14]]) # Create data frame
+
+df$StartingAge <- c(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 16, 16, 16, 16, 16, 16, 16) # add column which says what the asking age was
+df$SurvYear <- c(2017) # add column with survey year
+df$Geschlecht <- c("Total", "Total", "Total", "Total", "Total", "Total", "Total", "Total", "Männlich", "Männlich", "Männlich", "Männlich", "Männlich", "Männlich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Total", "Total", "Total", "Total", "Total", "Total", "Total")
+df$GeschlechtNum <- ifelse(df$Geschlecht == "Total", 3, ifelse(df$Geschlecht == "Männlich", 1, 2))
+  
+colnames(df) <- c("Lfd. Nr.", "Gegenstand der Nachweisung", "Alle Personen: erfasste Anzahl", "Alle Personen: hochgerechnet 1000", "Internetnutzer/-innen: erfasste Anzahl", "Internetnutzer/-innen: hochgerechnet 1000", "Internetnutzer/-innen letzte 3 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 3 Monate: hochgerechnet 1000", "Internetnutzer/-innen letzte 12 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 12 Monate: hochgerechnet 1000", "Online-EInkäufer/-innen letzte 3 Monate: erfasste Anzahl", "Online-EInkäufer/-innen letzte 3 Monate: hochgerechnet 1000", "Online-EInkäufer/-innen letzte 12 Monate: erfasste Anzahl", "Online-EInkäufer/-innen letzte 12 Monate: hochgerechnet 1000", "StartingAge", "SurvYear", "Geschlecht", "GeschlechtNum")
+
+df17 <- df
+df17
+
+```
+
+## Save Data Frame for 2017
+
+
+```{r Save Data Frame}
+
+# Store dataframe as csv style
+write.csv(df17,"/Users/sophiehensgen/Github-Projects/Internetnutzung_Deutschland/internet.17.csv", row.names = FALSE)
 
 ```
 
@@ -113,9 +174,56 @@ gesamt <- ikt.17[13]
 
 
 ```{r einzelne pdfs}
-ikt.18
+# ikt.18
 
-gesamt <- ikt.18[13]
+table <- ikt.18[12]
+
+# Delete the collumns for easy access
+t <- gsub(".*10 Jahren", "", table) # delete everything before 10 Jahren
+t <- gsub("1) Einschließlich.*$", "", t) # delete everything after 1 Einschließlich
+t <- unlist(strsplit(t, split = "\\s{2,}")) # split into individual characters
+
+t <- t[-c(1, 44, 45, 130, 215, 286, 287, 332, 345, 346)] # delete first element 
+t <- gsub("Rentner/-innen und andere", "Rentner/-innen und andere nicht erwerbstätige Personen", t)
+t <- gsub("10 - 15", "Alter: 10 - 15", t)
+t <- gsub("16 - 24", "Alter: 16 - 24", t)
+t <- gsub("25 - 44", "Alter: 25 - 44", t)
+t <- gsub("45 - 64", "Alter: 45 - 64", t)
+t <- gsub("65 Jahre und älter", "Alter: 65 Jahre und älter.", t)
+t <- gsub("\\.", "", t)
+t <- gsub("Männlich", "Männlich - Komplett", t)
+t <- gsub("Weiblich", "Weiblich - Komplett", t)
+t <- gsub("Niedrig", "Bildungsstand - Niedrig", t)
+t <- gsub("Mittel", "Bildungsstand - Mittel", t)
+t <- gsub("Hoch", "Bildungsstand - Hoch", t)
+t <- gsub("\n", "", t)
+
+b <- list()
+for(i in 1:14){
+  b[[i]] <- t[seq(i, length(t), 14)] # loop to create individual columns per list
+}
+
+df <- data.frame(b[[1]], b[[2]],  b[[3]], b[[4]], b[[5]], b[[6]], b[[7]], b[[8]], b[[9]], b[[10]], b[[11]], b[[12]], b[[13]], b[[14]]) # Create data frame
+
+df$StartingAge <- c(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 16, 16, 16, 16, 16, 16, 16) # add column which says what the asking age was
+df$SurvYear <- c(2018) # add column with survey year
+df$Geschlecht <- c("Total", "Total", "Total", "Total", "Total", "Total", "Total", "Total", "Männlich", "Männlich", "Männlich", "Männlich", "Männlich", "Männlich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Total", "Total", "Total", "Total", "Total", "Total", "Total")
+df$GeschlechtNum <- ifelse(df$Geschlecht == "Total", 3, ifelse(df$Geschlecht == "Männlich", 1, 2))
+  
+colnames(df) <- c("Lfd. Nr.", "Gegenstand der Nachweisung", "Alle Personen: erfasste Anzahl", "Alle Personen: hochgerechnet 1000", "Internetnutzer/-innen: erfasste Anzahl", "Internetnutzer/-innen: hochgerechnet 1000", "Internetnutzer/-innen letzte 3 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 3 Monate: hochgerechnet 1000", "Internetnutzer/-innen letzte 12 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 12 Monate: hochgerechnet 1000", "Online-EInkäufer/-innen letzte 3 Monate: erfasste Anzahl", "Online-EInkäufer/-innen letzte 3 Monate: hochgerechnet 1000", "Online-EInkäufer/-innen letzte 12 Monate: erfasste Anzahl", "Online-EInkäufer/-innen letzte 12 Monate: hochgerechnet 1000", "StartingAge", "SurvYear", "Geschlecht", "GeschlechtNum")
+
+df18 <- df
+df18
+
+```
+
+## Save Data Frame for 2018
+
+
+```{r Save Data Frame}
+
+# Store dataframe as csv style
+write.csv(df18,"/Users/sophiehensgen/Github-Projects/Internetnutzung_Deutschland/internet.18.csv", row.names = FALSE)
 
 ```
 
@@ -125,9 +233,58 @@ gesamt <- ikt.18[13]
 ```{r einzelne pdfs}
 ikt.19
 
-gesamt <- ikt.19[13]
+table <- ikt.19[13]
+
+# Delete the collumns for easy access
+t <- gsub(".*10 Jahren", "", table) # delete everything before 10 Jahren
+t <- gsub("1) Einschließlich.*$", "", t) # delete everything after 1 Einschließlich
+t <- unlist(strsplit(t, split = "\\s{2,}")) # split into individual characters
+
+t <- t[-c(1, 44, 45, 130, 215, 286, 287, 332, 345, 346)] # delete first element 
+t <- gsub("Rentner/-innen und andere", "Rentner/-innen und andere nicht erwerbstätige Personen", t)
+t <- gsub("10 - 15", "Alter: 10 - 15", t)
+t <- gsub("16 - 24", "Alter: 16 - 24", t)
+t <- gsub("25 - 44", "Alter: 25 - 44", t)
+t <- gsub("45 - 64", "Alter: 45 - 64", t)
+t <- gsub("65 Jahre und älter", "Alter: 65 Jahre und älter.", t)
+t <- gsub("\\.", "", t)
+t <- gsub("Männlich", "Männlich - Komplett", t)
+t <- gsub("Weiblich", "Weiblich - Komplett", t)
+t <- gsub("Niedrig", "Bildungsstand - Niedrig", t)
+t <- gsub("Mittel", "Bildungsstand - Mittel", t)
+t <- gsub("Hoch", "Bildungsstand - Hoch", t)
+t <- gsub("\n", "", t)
+
+b <- list()
+for(i in 1:14){
+  b[[i]] <- t[seq(i, length(t), 14)] # loop to create individual columns per list
+}
+
+df <- data.frame(b[[1]], b[[2]],  b[[3]], b[[4]], b[[5]], b[[6]], b[[7]], b[[8]], b[[9]], b[[10]], b[[11]], b[[12]], b[[13]], b[[14]]) # Create data frame
+
+df$StartingAge <- c(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 16, 16, 16, 16, 16, 16, 16) # add column which says what the asking age was
+df$SurvYear <- c(2019) # add column with survey year
+df$Geschlecht <- c("Total", "Total", "Total", "Total", "Total", "Total", "Total", "Total", "Männlich", "Männlich", "Männlich", "Männlich", "Männlich", "Männlich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Total", "Total", "Total", "Total", "Total", "Total", "Total")
+df$GeschlechtNum <- ifelse(df$Geschlecht == "Total", 3, ifelse(df$Geschlecht == "Männlich", 1, 2))
+  
+colnames(df) <- c("Lfd. Nr.", "Gegenstand der Nachweisung", "Alle Personen: erfasste Anzahl", "Alle Personen: hochgerechnet 1000", "Internetnutzer/-innen: erfasste Anzahl", "Internetnutzer/-innen: hochgerechnet 1000", "Internetnutzer/-innen letzte 3 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 3 Monate: hochgerechnet 1000", "Internetnutzer/-innen letzte 12 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 12 Monate: hochgerechnet 1000", "Online-EInkäufer/-innen letzte 3 Monate: erfasste Anzahl", "Online-EInkäufer/-innen letzte 3 Monate: hochgerechnet 1000", "Online-EInkäufer/-innen letzte 12 Monate: erfasste Anzahl", "Online-EInkäufer/-innen letzte 12 Monate: hochgerechnet 1000", "StartingAge", "SurvYear", "Geschlecht", "GeschlechtNum")
+
+df19 <- df
+df19
 
 ```
+
+## Save Data Frame for 2019
+
+
+```{r Save Data Frame}
+
+# Store dataframe as csv style
+write.csv(df19,"/Users/sophiehensgen/Github-Projects/Internetnutzung_Deutschland/internet.19.csv", row.names = FALSE)
+
+```
+
+
 
 ## Start Cleaning Data with 2020
 
@@ -135,14 +292,96 @@ gesamt <- ikt.19[13]
 ```{r einzelne pdfs}
 ikt.20
 
-gesamt <- ikt.20[13]
+table <- ikt.20[12]
+
+# Delete the collumns for easy access
+t <- gsub(".*10 Jahren", "", table) # delete everything before 10 Jahren
+t <- gsub("1) Einschließlich.*$", "", t) # delete everything after 1 Einschließlich
+t <- unlist(strsplit(t, split = "\\s{2,}")) # split into individual characters
+
+t <- t[-c(1, 44, 45, 130, 215, 286, 287, 332, 345, 346)] # delete first element 
+t <- gsub("Rentner/-innen und andere", "Rentner/-innen und andere nicht erwerbstätige Personen", t)
+t <- gsub("10 - 15", "Alter: 10 - 15", t)
+t <- gsub("16 - 24", "Alter: 16 - 24", t)
+t <- gsub("25 - 44", "Alter: 25 - 44", t)
+t <- gsub("45 - 64", "Alter: 45 - 64", t)
+t <- gsub("65 Jahre und älter", "Alter: 65 Jahre und älter.", t)
+t <- gsub("\\.", "", t)
+t <- gsub("Männlich", "Männlich - Komplett", t)
+t <- gsub("Weiblich", "Weiblich - Komplett", t)
+t <- gsub("Niedrig", "Bildungsstand - Niedrig", t)
+t <- gsub("Mittel", "Bildungsstand - Mittel", t)
+t <- gsub("Hoch", "Bildungsstand - Hoch", t)
+t <- gsub("\n", "", t)
+
+b <- list()
+for(i in 1:14){
+  b[[i]] <- t[seq(i, length(t), 14)] # loop to create individual columns per list
+}
+
+df <- data.frame(b[[1]], b[[2]],  b[[3]], b[[4]], b[[5]], b[[6]], b[[7]], b[[8]], b[[9]], b[[10]], b[[11]], b[[12]], b[[13]], b[[14]]) # Create data frame
+
+df$StartingAge <- c(10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 16, 16, 16, 16, 16, 16, 16) # add column which says what the asking age was
+df$SurvYear <- c(2020) # add column with survey year
+df$Geschlecht <- c("Total", "Total", "Total", "Total", "Total", "Total", "Total", "Total", "Männlich", "Männlich", "Männlich", "Männlich", "Männlich", "Männlich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Weiblich", "Total", "Total", "Total", "Total", "Total", "Total", "Total")
+df$GeschlechtNum <- ifelse(df$Geschlecht == "Total", 3, ifelse(df$Geschlecht == "Männlich", 1, 2))
+  
+colnames(df) <- c("Lfd. Nr.", "Gegenstand der Nachweisung", "Alle Personen: erfasste Anzahl", "Alle Personen: hochgerechnet 1000", "Internetnutzer/-innen: erfasste Anzahl", "Internetnutzer/-innen: hochgerechnet 1000", "Internetnutzer/-innen letzte 3 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 3 Monate: hochgerechnet 1000", "Internetnutzer/-innen letzte 12 Monate: erfasste Anzahl", "Internetnutzer/-innen letzte 12 Monate: hochgerechnet 1000", "Online-EInkäufer/-innen letzte 3 Monate: erfasste Anzahl", "Online-EInkäufer/-innen letzte 3 Monate: hochgerechnet 1000", "Online-EInkäufer/-innen letzte 12 Monate: erfasste Anzahl", "Online-EInkäufer/-innen letzte 12 Monate: hochgerechnet 1000", "StartingAge", "SurvYear", "Geschlecht", "GeschlechtNum")
+
+df20 <- df
+df20
 
 ```
 
+## Save Data Frame for 2020
+
+
+```{r Save Data Frame}
+
+# Store dataframe as csv style
+write.csv(df20,"/Users/sophiehensgen/Github-Projects/Internetnutzung_Deutschland/internet.20.csv", row.names = FALSE)
+
+```
+
+## Combine data frames into one
+
+```{r combine data frames}
+
+# Combine all years into one
+
+df <- rbind(df16, df17, df18, df19, df20)
+
+# get rid of whitespacing in order to change type
+df$`Alle Personen: erfasste Anzahl` <- gsub(" ", "", df$`Alle Personen: erfasste Anzahl`)
+df$`Alle Personen: hochgerechnet 1000` <- gsub(" ", "", df$`Alle Personen: hochgerechnet 1000`)
+df$`Internetnutzer/-innen: erfasste Anzahl` <- gsub(" ", "", df$`Alle Personen: hochgerechnet 1000`)
+df$`Internetnutzer/-innen: hochgerechnet 1000`<- gsub(" ", "", df$`Internetnutzer/-innen: hochgerechnet 1000`)
+df$`Internetnutzer/-innen letzte 3 Monate: erfasste Anzahl`<- gsub(" ", "", df$`Internetnutzer/-innen letzte 3 Monate: erfasste Anzahl`)
+df$`Internetnutzer/-innen letzte 3 Monate: hochgerechnet 1000`<- gsub(" ", "", df$`Internetnutzer/-innen letzte 3 Monate: hochgerechnet 1000`)
+df$`Internetnutzer/-innen letzte 12 Monate: erfasste Anzahl`<- gsub(" ", "", df$`Internetnutzer/-innen letzte 12 Monate: erfasste Anzahl`)
+df$`Internetnutzer/-innen letzte 12 Monate: hochgerechnet 1000`<- gsub(" ", "", df$`Internetnutzer/-innen letzte 12 Monate: hochgerechnet 1000`)
+df$`Online-EInkäufer/-innen letzte 3 Monate: erfasste Anzahl`<- gsub(" ", "", df$`Online-EInkäufer/-innen letzte 3 Monate: erfasste Anzahl`)
+df$`Online-EInkäufer/-innen letzte 3 Monate: hochgerechnet 1000`<- gsub(" ", "", df$`Online-EInkäufer/-innen letzte 3 Monate: hochgerechnet 1000`)
+df$`Online-EInkäufer/-innen letzte 12 Monate: erfasste Anzahl`<- gsub(" ", "", df$`Online-EInkäufer/-innen letzte 12 Monate: erfasste Anzahl`)
+df$`Online-EInkäufer/-innen letzte 12 Monate: hochgerechnet 1000`<- gsub(" ", "", df$`Online-EInkäufer/-innen letzte 12 Monate: hochgerechnet 1000`)
 
 
 
+df[, c(1, 3:14, 16)] <- sapply(df[, c(1, 3:14, 16)], as.numeric)
+df
 
+```
+
+## Save final Data Frame
+
+
+```{r Save Data Frame}
+
+# Store dataframe as csv style
+
+write.csv(df,"/Users/sophiehensgen/Github-Projects/Internetnutzung_Deutschland/internet.final.csv", row.names = FALSE)
+
+```
 
 
 
